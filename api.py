@@ -110,3 +110,47 @@ class PetFriends:
         except:
             result = res.text
         return status, result
+
+
+    def add_new_pet_no_photo(self, auth_key: json, name: str, animal_type: str, age: str) -> json:
+        '''Метод отправляет post-запрос к api-сервера с данными о питомце (без фото)
+           и возвращает статус запроса с данными о питомце в формате json'''
+
+        headers = {'auth_key': auth_key['key']}
+        data = {
+                'name'       : name,
+                'animal_type': animal_type,
+                'age'        : age
+               }
+        res = requests.post(self.base_url + 'api/create_pet_simple', headers=headers, data=data)
+        status = res.status_code
+        result = ''
+        try:
+            result = res.json()
+        except:
+            result = res.text
+        print(result)
+        return status, result
+
+
+    def add_photo_of_pet(self, auth_key: json, pet_id: str, pet_photo: str) -> json:
+        '''Метод позволяет добавить фото питомца и возвращает статус и данные питомца
+           в формате json'''
+
+        data = MultipartEncoder(
+            fields={
+                    'pet_photo': (pet_photo, open(pet_photo, 'rb'), 'image/jpeg')
+                   })
+        headers = {
+                   'auth_key': auth_key['key'],
+                   'Content-Type': data.content_type
+                  }
+
+        res = requests.post(self.base_url + 'api/pets/set_photo/' + pet_id, headers=headers, data=data)
+        status = res.status_code
+        result = ''
+        try:
+            result = res.json()
+        except:
+            result = res.text
+        return status, result

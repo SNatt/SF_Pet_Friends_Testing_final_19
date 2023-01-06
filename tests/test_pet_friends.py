@@ -113,3 +113,89 @@ def test_del_any_pet():
 
     assert status == 200
     assert any_pet_id not in any_pets.values()
+
+
+def test_add_pet_no_photo(name='Варя', animal_type='беспородная', age='3'):
+    '''Проверяем возможность добавления нового питомца без фото с корректными данными'''
+
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    status, result = pf.add_new_pet_no_photo(auth_key, name, animal_type, age)
+
+    assert status == 200
+    assert result['name'] == name
+
+
+def test_add_photo_of_pet(pet_photo='images/catvar.jpg'):
+    '''Проверяем возможность добавления нового фото питомца'''
+
+    pet_photo = os.path.join(os.path.dirname(__file__), pet_photo)
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, my_pets = pf.get_list_of_pets(auth_key, 'my_pets')
+
+    if len(my_pets['pets']) > 0:
+        status, result = pf.add_photo_of_pet(auth_key, my_pets['pets'][0]['id'], pet_photo)
+        _, my_pets = pf.get_list_of_pets(auth_key, 'my_pets')
+
+        assert status == 200
+        assert result['pet_photo'] == my_pets['pets'][0]['pet_photo']
+    else:
+        raise Exception('Мои питомцы отсутствуют')
+
+
+def test_add_pet_with_symbols_in_name(animal_type='дворняжка', age='4'):
+    '''Проверка с негативным сценарием. Проверяется возмжность добавления питомца
+       со специальными символами в имени. Тест не пройден, если питомец добавлен'''
+
+    name = 'Алис[0%^@'
+
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, result = pf.add_new_pet_no_photo(auth_key, name, animal_type, age)
+
+
+    assert name not in result['name'], 'Питомец добавлен с недопустимыми символами в поле "name"'
+
+
+def test_add_pet_with_negative_age(name='Алиса', animal_type='дворняжка'):
+    '''Проверка с негативным сценарием. Проверяется возожность добавления питомца
+       с отрицательным возрастом. Тест не пройден, если питомец добавлен.'''
+
+    age = '-3'
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, result = pf.add_new_pet_no_photo(auth_key, name, animal_type, age)
+
+    assert age not in result['age'], 'Питомец добавлен с отрицательным возрастом'
+
+
+def test_add_pet_with_symbols_in_age(name='Алиса', animal_type='дворняжка'):
+    '''Проверка с негативным сценарием. Проверяется возможность добавления питомца
+       с символами в поле возраст. Тест не пройден, если питомец добавлен.'''
+
+    age = 'f@'
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, result = pf.add_new_pet_no_photo(auth_key, name, animal_type, age)
+
+    assert age not in result['age'], 'Питомец добавлен с недопустимыми символами в поле "age"'
+
+
+def test_add_pet_with_many_numbers_in_age(name='Алиса', animal_type='дворняжка'):
+    '''Проверка с негативным сценарием. Проверятся возможность добавления питомца
+       с неограниченным возрастом. Тест не пройден, если питомец добавлен.'''
+
+    age = '678346598635476'
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, result = pf.add_new_pet_no_photo(auth_key, name, animal_type, age)
+
+    assert age not in result['age'], 'Питомец добавлен с неограниченным возрастом'
+
+
+def test_add_pet_with_symbol_in_animal_type(name='Алиса', age='4'):
+    '''Проверка с негативным сценарием. Проверяется возможность добавления питомца
+       с цифрами и специальными символами в поле "animal_type".
+       Тест не пройден, если питомец добавлен.'''
+
+    animal_type = 'двор1%*@{}/'
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, result = pf.add_new_pet_no_photo(auth_key, name, animal_type, age)
+
+    assert animal_type not in result['animal_type'], 'Питомец добавлен с недопустимыми символами в поле "animal_type"'
+
